@@ -1,0 +1,58 @@
+<Window x:Class="EdgeTtsOverlay.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:automation="clr-namespace:System.Windows.Automation;assembly=PresentationCore"
+        Title="Edge TTS Overlay" Width="360" Height="76" MinWidth="340"
+        WindowStyle="None" AllowsTransparency="True" Background="Transparent"
+        Topmost="True" ShowInTaskbar="False" ShowActivated="False" ResizeMode="NoResize">
+    <Border x:Name="Glass" CornerRadius="24" BorderThickness="1" Padding="10" SnapsToDevicePixels="True">
+        <Border.Background>
+            <SolidColorBrush Color="#A6182232"/>
+        </Border.Background>
+        <Border.BorderBrush>
+            <SolidColorBrush Color="#38FFFFFF"/>
+        </Border.BorderBrush>
+        <Grid ClipToBounds="True">
+            <Grid>
+                <Grid.RowDefinitions><RowDefinition Height="54"/><RowDefinition x:Name="DetailsRow" Height="0"/></Grid.RowDefinitions>
+                <Grid Grid.Row="0" MouseLeftButtonDown="OnDrag">
+                    <Grid.ColumnDefinitions><ColumnDefinition Width="54"/><ColumnDefinition Width="*"/><ColumnDefinition Width="54"/><ColumnDefinition Width="54"/></Grid.ColumnDefinitions>
+                    <Button x:Name="PauseButton" Grid.Column="0" Style="{StaticResource GlassButton}" Content="&#xE769;" ToolTip="暫停朗讀"
+                            automation:AutomationProperties.Name="暫停朗讀" Click="OnPause"/>
+                    <StackPanel Grid.Column="1" Margin="8,4" VerticalAlignment="Center">
+                        <TextBlock x:Name="StatusText" Foreground="{StaticResource TextPrimary}" FontFamily="Segoe UI Variable Text" FontWeight="SemiBold" Text="準備語音服務…" TextTrimming="CharacterEllipsis"/>
+                        <TextBlock x:Name="SentenceText" Foreground="{StaticResource TextSecondary}" FontFamily="Segoe UI Variable Text" FontSize="12" Text="按 Ctrl+Alt+R 朗讀剪貼簿" TextTrimming="CharacterEllipsis"/>
+                    </StackPanel>
+                    <Button Grid.Column="2" Style="{StaticResource GlassButton}" Content="&#xE71A;" ToolTip="停止"
+                            automation:AutomationProperties.Name="停止朗讀" Click="OnStop"/>
+                    <Button Grid.Column="3" Style="{StaticResource GlassButton}" Content="&#xE70D;" ToolTip="展開"
+                            automation:AutomationProperties.Name="展開詳細內容" Click="OnExpand"/>
+                </Grid>
+                <Grid Grid.Row="1" Margin="4,12,4,2">
+                    <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="104"/></Grid.RowDefinitions>
+                    <Border Background="#24FFFFFF" BorderBrush="#3FFFFFFF" BorderThickness="1" CornerRadius="16" Padding="11,8" Margin="0,0,0,8">
+                        <StackPanel>
+                            <TextBlock Text="目前送讀" Foreground="{StaticResource TextSecondary}" FontSize="11"/>
+                            <TextBlock x:Name="CurrentText" Margin="0,4,0,0" Foreground="{StaticResource TextPrimary}" TextWrapping="Wrap" MaxHeight="58"/>
+                        </StackPanel>
+                    </Border>
+                    <Border Grid.Row="1" Background="#16070C16" BorderBrush="#2FFFFFFF" BorderThickness="1" CornerRadius="16" Padding="4">
+                        <ListBox x:Name="QueueList" Background="Transparent" Foreground="{StaticResource TextPrimary}" BorderThickness="0" DisplayMemberPath="Display" MouseDoubleClick="OnQueueEdit" ToolTip="雙擊查看或重新編輯原文"/>
+                    </Border>
+                    <Grid Grid.Row="2" Margin="0,4,0,0">
+                        <Grid.RowDefinitions><RowDefinition/><RowDefinition/></Grid.RowDefinitions>
+                        <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition/><ColumnDefinition/><ColumnDefinition/></Grid.ColumnDefinitions>
+                        <Button Grid.Row="0" Grid.Column="0" Style="{StaticResource GlassTextButton}" Content="貼上／編輯" automation:AutomationProperties.Name="貼上或編輯朗讀文字" Click="OnEdit"/>
+                        <Button Grid.Row="0" Grid.Column="1" Style="{StaticResource GlassTextButton}" Content="播放" automation:AutomationProperties.Name="播放選取文章" Click="OnPlaySelected"/>
+                        <Button Grid.Row="0" Grid.Column="2" Style="{StaticResource GlassTextButton}" Content="重試" automation:AutomationProperties.Name="重試目前句" Click="OnRetry"/>
+                        <Button Grid.Row="0" Grid.Column="3" Style="{StaticResource GlassTextButton}" Content="跳過" automation:AutomationProperties.Name="跳過目前句" Click="OnSkip"/>
+                        <Button Grid.Row="1" Grid.Column="0" Style="{StaticResource GlassTextButton}" Content="移除" automation:AutomationProperties.Name="移除選取文章" Click="OnRemove"/>
+                        <Button Grid.Row="1" Grid.Column="1" Style="{StaticResource GlassTextButton}" Content="清空" automation:AutomationProperties.Name="清空佇列" Click="OnClear"/>
+                        <Button Grid.Row="1" Grid.Column="2" Grid.ColumnSpan="2" Style="{StaticResource GlassTextButton}" Content="設定" automation:AutomationProperties.Name="開啟設定" Click="OnSettings"/>
+                    </Grid>
+                </Grid>
+            </Grid>
+        </Grid>
+    </Border>
+</Window>
+

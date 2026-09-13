@@ -1,0 +1,14 @@
+<Window x:Class="EdgeTtsOverlay.TextEntryWindow" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="朗讀文字" Width="680" Height="520" WindowStartupLocation="CenterOwner" Background="#F51B2331" Foreground="#F8FAFF">
+    <Grid Margin="20"><Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/><RowDefinition Height="120"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+        <TextBlock Text="原文（最多 20,000 字元）" FontWeight="SemiBold"/>
+        <TextBox x:Name="OriginalBox" Grid.Row="1" Margin="0,8,0,12" AcceptsReturn="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" TextChanged="OnTextChanged" AutomationProperties.Name="原文編輯器"/>
+        <TextBlock Grid.Row="2" Text="實際送讀預覽" FontWeight="SemiBold"/>
+        <TextBox x:Name="PreviewBox" Grid.Row="3" Margin="0,8,0,12" IsReadOnly="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" AutomationProperties.Name="實際送讀預覽"/>
+        <StackPanel Grid.Row="4" Orientation="Horizontal" HorizontalAlignment="Right">
+            <TextBlock x:Name="CountText" VerticalAlignment="Center" Margin="0,0,16,0"/>
+            <Button Content="追加" MinWidth="86" MinHeight="40" Margin="4" Click="OnAppend" AutomationProperties.Name="追加至朗讀佇列"/>
+            <Button Content="取代並朗讀" MinWidth="110" MinHeight="40" Margin="4" Click="OnReplace" AutomationProperties.Name="取代目前朗讀"/>
+        </StackPanel>
+    </Grid>
+</Window>

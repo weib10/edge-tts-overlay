@@ -1,0 +1,14 @@
+# Build output
+bin/
+obj/
+
+# Python virtualenv and caches
+.venv/
+__pycache__/
+*.pyc
+
+# Generated captures: offscreen renders and real-desktop acceptance screenshots.
+# The verify_*.png ones show whatever was on the desktop behind the overlay.
+artifacts/
+
+# Local settings live in %APPDATA%\EdgeTtsLocal, not here.
