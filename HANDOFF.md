@@ -4,7 +4,22 @@
 
 **交付狀態**：正常模式 overlay 運行中（`start.ps1` 啟動、無 `--ui-test`），本機後端 `127.0.0.1:8766` health=`ok`。
 自動測試：Python 16/16、C# 18/18、Release 0 warnings / 0 errors。
+**repo：public `weib10/edge-tts-overlay`**（2026-09-13 從非 git 狀態初始化並推上去）。
 開發歷史封存在 `docs/history/HANDOFF-2026-09-13.md`。
+
+### 2026-09-13（四）：清掉兩個已知 bug，然後開 repo 推上 GitHub
+
+- **斷線不再噴 ASGI traceback**：`_run_cancellable`／`_synthesis_slot` 原本用 `CancelledError` 表示
+  「client 走了」，uvicorn 當成未處理例外，每次 skip／replace 都印整段 traceback，會蓋掉
+  `PythonServer.LastError` 的啟動診斷。改成自訂的 `ClientGone`，endpoint 收掉回 499。
+  注意它必須在 `_synthesize` 的 `except Exception` **之前**重新丟出，否則會被當成上游失敗而重試再 502。
+  回歸測試的 uvicorn 因此改回 `--log-level warning`——傳回噪音的話測試輸出會自己抓到。
+- **MASTER.md 與程式碼同步**：不只材質描述（acrylic blur → per-pixel alpha，且現在沒有 opaque
+  fallback），token 也多處過時，照 XAML 實際值更新：surface tint `#A6182232`、border `#38FFFFFF`、
+  control surface `#10FFFFFF`／hover `#26FFFFFF`、圓角 24／16 DIP。
+- **git 化**：`.gitignore` 排除 `bin/`、`obj/`、`.venv/`、`__pycache__/` 與整個 `artifacts/`。
+  `artifacts/` 要排除是因為 `verify_*.png` 是實機截圖，會連帶拍到桌面上當時開著的東西。
+  推之前掃過祕密（沒有，這工具本來就不需要 key）與本機絕對路徑（README 與封存的 HANDOFF 各兩處，已清）。
 
 ### 2026-09-13（三）：真連線下 /api/tts 會卡死——本輪最重要的修復
 
@@ -61,15 +76,11 @@ Python 是 `server/stress_app.py`（要 RSS 數字的話 `pip install psutil`，
 
 ## 下一步
 
-1. **client 斷線時 server log 會噴整段 ASGI traceback**（`_run_cancellable` 用 `CancelledError`
-   表示「client 走了」，uvicorn 當成未處理例外）。功能正確、只是噪音，但它會蓋掉 `PythonServer.LastError`
-   的啟動診斷。要修就是換成自訂 exception 或在 endpoint 收掉回 499，會動到 4 個測試的斷言。
-   回歸測試目前是用 `--log-level critical` 把它壓下去的。
-2. `design-system/edge-tts-overlay/MASTER.md` 還寫著 acrylic blur，程式碼已是 per-pixel alpha，該同步。
-3. 白底／高對比背景的透明度仍未驗（前一輪 overlay 後方剛好是深色頁面），跨螢幕拖曳也未驗。
-4. Python 壓測下 RSS 隨疊代等比例微增（~2KB/次），tracemalloc 指向 asyncio 內部結構而非 `server/app.py`，
+1. **repo 是 public 但還沒有 LICENSE**，等於保留所有權利、別人不能合法使用。要給人用就補一個。
+2. 白底／高對比背景的透明度仍未驗（前兩輪 overlay 後方剛好是深色頁面），跨螢幕拖曳也未驗。
+3. Python 壓測下 RSS 隨疊代等比例微增（~2KB/次），tracemalloc 指向 asyncio 內部結構而非 `server/app.py`，
    但沒深挖到能完全下定論。目前不影響使用。
-5. 要發佈到其他受 Smart App Control 保護的電腦時才需要處理 code signing。
+4. 要發佈到其他受 Smart App Control 保護的電腦時才需要處理 code signing。
 
 ## 驗證命令
 

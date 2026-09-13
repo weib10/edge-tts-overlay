@@ -10,7 +10,9 @@ Edge TTS Local：Windows 置頂朗讀 overlay（WPF，`src/`）＋本機 FastAPI
 
 ## 進度真相
 
-`HANDOFF.md`（現況／下一步），完成一件事的當下更新。**本專案不是 git**，沒有 `git log` 可回頭翻，HANDOFF 是唯一時間軸，所以更要用取代不用追加：2026-09-13 盤點時「現況」已疊到二十多條帶日期的段落，接手要整節讀完才知道哪條還算數。寫法正本在 `..\AGENTS.md`「工作習慣」。
+`HANDOFF.md`（現況／下一步），完成一件事的當下更新。**用取代不用追加**：2026-09-13 盤點時「現況」已疊到二十多條帶日期的段落，接手要整節讀完才知道哪條還算數。時間軸交給 `git log`，整段歷史放 `docs/history/`。寫法正本在 `..\AGENTS.md`「工作習慣」。
+
+2026-09-13 起本專案是 git，remote 是公開的 `weib10/edge-tts-overlay`。**推上去的東西是公開的**：`artifacts/` 已整個 gitignore（`verify_*.png` 是實機截圖，會連帶拍到桌面上當時開著的東西），文件裡不要寫本機絕對路徑。
 
 UI 材質與 token 的正本是 `design-system/edge-tts-overlay/MASTER.md`，改了 XAML 的材質或 token 就同步它。
 
