@@ -76,11 +76,11 @@ Python 是 `server/stress_app.py`（要 RSS 數字的話 `pip install psutil`，
 
 ## 下一步
 
-1. **repo 是 public 但還沒有 LICENSE**，等於保留所有權利、別人不能合法使用。要給人用就補一個。
-2. 白底／高對比背景的透明度仍未驗（前兩輪 overlay 後方剛好是深色頁面），跨螢幕拖曳也未驗。
-3. Python 壓測下 RSS 隨疊代等比例微增（~2KB/次），tracemalloc 指向 asyncio 內部結構而非 `server/app.py`，
+1. 白底／高對比背景的透明度仍未驗（前兩輪 overlay 後方剛好是深色頁面），跨螢幕拖曳也未驗。
+2. Python 壓測下 RSS 隨疊代等比例微增（~2KB/次），tracemalloc 指向 asyncio 內部結構而非 `server/app.py`，
    但沒深挖到能完全下定論。目前不影響使用。
-4. 要發佈到其他受 Smart App Control 保護的電腦時才需要處理 code signing。
+3. 要發佈到其他受 Smart App Control 保護的電腦時才需要處理 code signing。
+4. LICENSE 的版權人寫的是 GitHub handle `weib10`；要換成真實姓名就改那一行。
 
 ## 驗證命令
 

@@ -51,3 +51,9 @@ dotnet run --project .\tests\EdgeTtsOverlay.Tests --no-restore -- --decode .\smo
 ## 資料與限制
 
 程式只保存聲音、速度、閱讀模式、術語、快捷鍵、視窗位置及自動啟動選項，位置在 `%LOCALAPPDATA%\EdgeTtsLocal\settings.json`。文章與佇列不會跨執行保存。合成音訊暫存在 `%TEMP%\EdgeTtsLocal`，播放、取消及下次啟動時清理。單段失敗時停在該篇，可按「重試」或「跳過」。
+
+## 授權
+
+MIT，見 [LICENSE](LICENSE)。
+
+本專案本身不含語音模型：聲音由 Microsoft Edge 的線上 TTS 服務合成，該服務不在此授權範圍內，使用時請自行遵守 Microsoft 的條款。
