@@ -12,6 +12,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import Response
 from pydantic import BaseModel, Field
 
+from server import reading
+
 app = FastAPI(title="Edge TTS Local", version="1.0.0")
 app.add_middleware(
     CORSMiddleware,
@@ -42,9 +44,33 @@ class TtsRequest(BaseModel):
     pitch: int = Field(default=0, ge=-50, le=50)
 
 
+class PrepareRequest(BaseModel):
+    text: str = Field(min_length=1, max_length=20_000)
+    voice: str = Field(min_length=1, max_length=128)
+    english_voice: str | None = Field(default=None, max_length=128)
+    reading_mode: bool = True
+    pronunciations: dict[str, str] | None = None   # None = the overlay's defaults
+    spell: bool = True
+    min_english_words: int = Field(default=3, ge=1, le=50)
+
+
 @app.get("/health")
 async def health() -> dict[str, str]:
     return {"status": "ok"}
+
+
+@app.post("/api/prepare")
+async def prepare_text(payload: PrepareRequest) -> dict[str, Any]:
+    """Text → the segments to synthesize, each with the voice that should read it (server/reading.py).
+
+    Nothing leaves the machine here: this only decides how the text will be read.
+    """
+    if not payload.text.strip():
+        raise HTTPException(status_code=422, detail="文字不能是空白")
+    return {"segments": reading.segments(
+        payload.text, voice=payload.voice, english_voice=payload.english_voice or None,
+        reading_mode=payload.reading_mode, pronunciations=payload.pronunciations, spell=payload.spell,
+        min_english_words=payload.min_english_words)}
 
 
 async def _list_voices() -> list[dict[str, Any]]:

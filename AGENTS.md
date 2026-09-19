@@ -16,10 +16,12 @@ Edge TTS Local：Windows 置頂朗讀 overlay（WPF，`src/`）＋本機 FastAPI
 
 UI 材質與 token 的正本是 `design-system/edge-tts-overlay/MASTER.md`，改了 XAML 的材質或 token 就同步它。
 
+**念法的正本是 `server/reading.py`**（`POST /api/prepare`：閱讀模式、術語字典、切句、縮寫拆成字母念、英文段落換英文聲音）。overlay 目前還用自己的 C# 那份（`TextProcessor.cs`／`TextSegmenter.cs`），`reading.py` 的相容模式（`spell=False`、不給英文聲音）必須跟它一字不差——改了任一邊就跑 `.venv\Scripts\python.exe scripts\reading_parity\compare.py`（拿 C# 原檔跑同一批假輸入逐句比對，要 .NET 8 SDK）。Python 的 `\w`、`\b` 不能照抄 C#：兩邊對「字元」的定義不同。
+
 ## 環境怪癖
 
 - Python 在 `.venv\Scripts\python.exe`（3.12），沒有全域安裝；.NET 8 SDK。三支 `.ps1` 相容 Windows PowerShell 5.1 並檢查 native exit code，改它們維持這兩點。
-- 後端不是獨立啟動的：overlay 啟動時自己從 `.venv` 拉起 `uvicorn server.app:app` 在 `127.0.0.1:8766`；**8766 已有健康服務就沿用、退出時不殺它**。「服務在跑」不代表是這個 overlay 的，查 listener PID 再下結論。`start.ps1` 開的 GUI 行程是脫離的，session 結束不會自己收；收尾 `--shutdown`，不要留給下一個 session 猜是誰開的。
+- 後端通常是 overlay 啟動時自己從 `.venv` 拉起 `uvicorn server.app:app` 在 `127.0.0.1:8766`；**8766 已有健康服務就沿用、退出時不殺它**。machine-monitor 的面板（Read aloud）也會單獨起它（服務名 `tts-backend`，帶 `--no-access-log`，不開 overlay）。「服務在跑」不代表是這個 overlay 的，查 listener PID 再下結論。`start.ps1` 開的 GUI 行程是脫離的，session 結束不會自己收；收尾 `--shutdown`，不要留給下一個 session 猜是誰開的。
 - **429 是本地容量，不是 Microsoft**：只有帶 `X-Edge-Tts-Error: busy` 的 429 是本地 slot 滿（client 自己退避兩次），上游失敗一律轉成 502。2026-09-13 使用者回報的 429 曾被誤判為上游限流，真因是舊的 50 ms semaphore。
 - 正常模式是 `WS_EX_NOACTIVATE`＋`TOOLWINDOW`：不進工作列、視窗列舉與截圖工具看不到。**視覺驗收用 `--ui-test` 啟動**（進工作列、可被抓到，其餘行為相同），驗收完 `--shutdown` 關掉再用 `start.ps1` 開正常版。
 - `smoke.mp3` 是測試 fixture（C# 測試的 `--decode`／`--audio-restart` 用），不是垃圾；重產跑 `online_smoke.py`。`artifacts/` 是離屏渲染輸出的 PNG。

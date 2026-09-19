@@ -1,0 +1,16 @@
+<!-- Runs the overlay's own C# (TextProcessor / TextSegmenter) on a batch of inputs, so compare.py can
+     check server/reading.py against it. Only those two source files are compiled; the overlay is not built. -->
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="Program.cs" />
+    <Compile Include="..\..\src\EdgeTtsOverlay\Services\TextSegmenter.cs" />
+    <Compile Include="..\..\src\EdgeTtsOverlay\Services\TextProcessor.cs" />
+  </ItemGroup>
+</Project>

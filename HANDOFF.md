@@ -7,6 +7,13 @@
 **repo：public `weib10/edge-tts-overlay`**（2026-09-13 從非 git 狀態初始化並推上去）。
 開發歷史封存在 `docs/history/HANDOFF-2026-09-13.md`。
 
+### 2026-09-20：念法搬進後端（`POST /api/prepare`）
+
+使用者想要「英文用英文的人聲念、不是字的名詞念字母」，先用在 machine-monitor 面板的 Read aloud 上試。
+新增 `server/reading.py`：先照搬 overlay 的 `TextProcessor`／`TextSegmenter`（相容模式，跟 C# 比過 5,066 筆 0 差異，工具在 `scripts/reading_parity/`），再疊兩條新規則——三個字以上的英文段落換英文聲音（呼叫端給 `english_voice`），`GPU`／`vLLM`／`k8s`／`npm` 這類非單字拆成字母念（`spell`，術語字典優先；字典裡對應到自己的詞不拆）。
+`POST /api/prepare` 回 `[{text, voice, lang}]`，只在本機切文字、不連網。測試：`server/test_reading.py`（已加進 `test.ps1`）＋`test_app.py` 兩條；Python 38/38。**C# 沒動**（這包 09-14 改版還沒 commit，不想纏在一起），所以 overlay 還是舊念法，這輪也沒有重跑 C# 測試與 Release build。
+驗證：machine-monitor 面板經新版後端念中英混合的例子，中文段 HsiaoChen、英文段 Ava；英文聲音的線上合成只用固定例句 “This is a test sentence.” 跑一次（11,232 bytes、1.87 秒）。
+
 ### 2026-09-13（四）：清掉兩個已知 bug，然後開 repo 推上 GitHub
 
 - **斷線不再噴 ASGI traceback**：`_run_cancellable`／`_synthesis_slot` 原本用 `CancelledError` 表示
@@ -76,6 +83,7 @@ Python 是 `server/stress_app.py`（要 RSS 數字的話 `pip install psutil`，
 
 ## 下一步
 
+0. **overlay 改成問 `/api/prepare`**：`MainWindow.AddText` 與編輯視窗的預覽改呼叫後端，`ReadingItem.Segments` 改成帶聲音，`PlaybackCoordinator` 每段用自己的聲音合成；`AppSettings` 加英文聲音與拆字母兩個設定。做完 C# 的 `TextProcessor`／`TextSegmenter` 與 `scripts/reading_parity/` 就可以刪。先等 09-14 那包改版 commit。
 1. 白底／高對比背景的透明度仍未驗（前兩輪 overlay 後方剛好是深色頁面），跨螢幕拖曳也未驗。
 2. Python 壓測下 RSS 隨疊代等比例微增（~2KB/次），tracemalloc 指向 asyncio 內部結構而非 `server/app.py`，
    但沒深挖到能完全下定論。目前不影響使用。

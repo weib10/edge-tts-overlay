@@ -26,6 +26,19 @@ class ApiTests(unittest.IsolatedAsyncioTestCase):
     async def test_health(self):
         self.assertEqual({"status": "ok"}, await module.health())
 
+    async def test_prepare_gives_each_segment_its_voice(self):
+        result = await module.prepare_text(module.PrepareRequest(
+            text="這段的重點是：The quick brown fox jumps over the lazy dog. 然後用 GPU 跑。",
+            voice="zh-TW-HsiaoChenNeural", english_voice="en-US-AvaNeural"))
+        self.assertEqual([(s["voice"], s["text"]) for s in result["segments"]], [
+            ("zh-TW-HsiaoChenNeural", "這段的重點是："),
+            ("en-US-AvaNeural", "The quick brown fox jumps over the lazy dog."),
+            ("zh-TW-HsiaoChenNeural", "然後用 G P U 跑。")])
+
+    async def test_prepare_without_an_english_voice_is_one_voice(self):
+        result = await module.prepare_text(module.PrepareRequest(text="Hello there my friend.", voice="zh-TW-HsiaoChenNeural"))
+        self.assertEqual({s["voice"] for s in result["segments"]}, {"zh-TW-HsiaoChenNeural"})
+
     async def test_tts_returns_mp3_and_formats_options(self):
         with patch.object(module.edge_tts, "Communicate", FakeCommunicate):
             response = await module._synthesize(

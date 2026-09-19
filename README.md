@@ -15,7 +15,7 @@ cd edge-tts-overlay
 
 若啟動回報 `FileLoadException 0x800711C7`，請到「Windows 安全性 → 應用程式與瀏覽器控制 → 智慧型應用程式控制」查看狀態。Smart App Control 沒有單一 app 例外；要保留此防護並發佈本機建置，需使用有效 CA code-signing certificate 簽署。請勿為本專案關閉全機安全原則。
 
-程式會自行啟動 localhost FastAPI 服務。API 文件在 `http://127.0.0.1:8766/docs`，健康檢查為 `GET /health`，聲音清單為 `GET /api/voices`，合成為 `POST /api/tts`。若 8766 已有健康的服務，overlay 會沿用它，退出時不會終止該外部服務。
+程式會自行啟動 localhost FastAPI 服務。API 文件在 `http://127.0.0.1:8766/docs`，健康檢查為 `GET /health`，聲音清單為 `GET /api/voices`，合成為 `POST /api/tts`，念法為 `POST /api/prepare`（文字 → 一句一句、每句標好用哪個聲音：閱讀模式、術語字典、縮寫拆成字母念、英文段落換英文聲音；規則在 `server/reading.py`，目前 overlay 自己還沒用它）。若 8766 已有健康的服務，overlay 會沿用它，退出時不會終止該外部服務。
 
 `start.ps1` 會先建置 Release，再由已安裝的 `dotnet.exe` 啟動 DLL，並等待 localhost health 成功；若 Windows 應用程式控制原則封鎖組件，腳本會回傳失敗，而不會誤報啟動成功。它不會留下 console 視窗。自動化或疑難排解時可執行下列命令，讓現有實例經正常清理流程退出：
 
