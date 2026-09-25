@@ -31,6 +31,8 @@ public sealed class AppSettings
             {
                 var loaded = JsonSerializer.Deserialize<AppSettings>(File.ReadAllText(SettingsPath)) ?? new AppSettings();
                 loaded.Pronunciations = NormalizePronunciations(loaded.Pronunciations);
+                // 空的聲音 id 會讓 UI 的「同語言」篩選退化成整份清單，null 更會直接炸。
+                if (string.IsNullOrWhiteSpace(loaded.Voice)) loaded.Voice = new AppSettings().Voice;
                 if (loaded.Left is double left && !double.IsFinite(left)) loaded.Left = null;
                 if (loaded.Top is double top && !double.IsFinite(top)) loaded.Top = null;
                 return loaded;

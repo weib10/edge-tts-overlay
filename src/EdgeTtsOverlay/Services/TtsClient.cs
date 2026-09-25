@@ -46,15 +46,17 @@ public sealed class TtsClient(HttpClient httpClient) : ITtsSynthesizer
         return await response.Content.ReadFromJsonAsync<List<VoiceInfo>>(cancellationToken) ?? [];
     }
 
+    /// <summary>取到清單之後的判讀。呼叫端已經有清單時（例如要同時餵快速換聲音的下拉）就直接用這支，不必再打一次。</summary>
+    public static string DescribeVoiceStatus(IReadOnlyList<VoiceInfo> voices, string voiceId)
+    {
+        if (voices.Count == 0) return VoiceListUnavailable;
+        return voices.Any(voice => voice.Id == voiceId) ? "就緒" : "預設聲音不存在，請在設定中選擇";
+    }
+
     /// <summary>啟動時的聲音檢查：清單取不到只降級狀態，朗讀本身不靠它。</summary>
     public async Task<string> DescribeVoiceStatusAsync(string voiceId, CancellationToken cancellationToken = default)
     {
-        try
-        {
-            var voices = await GetVoicesAsync(cancellationToken);
-            if (voices.Count == 0) return VoiceListUnavailable;
-            return voices.Any(voice => voice.Id == voiceId) ? "就緒" : "預設聲音不存在，請在設定中選擇";
-        }
+        try { return DescribeVoiceStatus(await GetVoicesAsync(cancellationToken), voiceId); }
         catch (OperationCanceledException) { throw; }
         catch { return VoiceListUnavailable; }
     }

@@ -3,44 +3,433 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              ShutdownMode="OnExplicitShutdown">
     <Application.Resources>
-        <SolidColorBrush x:Key="TextPrimary" Color="#F8FAFF"/>
-        <SolidColorBrush x:Key="TextSecondary" Color="#C9D5E8"/>
-        <SolidColorBrush x:Key="Accent" Color="#78A9FF"/>
-        <Style x:Key="GlassButton" TargetType="Button">
-            <Setter Property="MinWidth" Value="44"/>
-            <Setter Property="MinHeight" Value="44"/>
-            <Setter Property="Margin" Value="2"/>
-            <Setter Property="Padding" Value="10,6"/>
+        <!-- 材質與 token 的正本是 design-system/edge-tts-overlay/MASTER.md；改這裡就同步它。 -->
+
+        <!-- ==== 文字 ==== -->
+        <SolidColorBrush x:Key="TextPrimary" Color="#F3F7FF"/>
+        <SolidColorBrush x:Key="TextSecondary" Color="#C2CFE4"/>
+        <SolidColorBrush x:Key="TextMuted" Color="#A7B4CB"/>
+        <SolidColorBrush x:Key="Accent" Color="#8FB7FF"/>
+
+        <!-- ==== 玻璃本體 ====
+             整片是 WPF per-pixel alpha，沒有背景模糊可用，所以「厚度」靠三層畫出來：
+             底色漸層（上清下濁）、鏡面邊（亮—暗—亮）、頂與底的內反光。 -->
+        <LinearGradientBrush x:Key="GlassSurface" StartPoint="0.15,0" EndPoint="0.85,1">
+            <GradientStop Offset="0" Color="#6E2C4272"/>
+            <GradientStop Offset="0.42" Color="#7C15274F"/>
+            <GradientStop Offset="1" Color="#8A0B1631"/>
+        </LinearGradientBrush>
+        <!-- 玻璃芯：內縮 6 DIP 的第二層，所以最外圈仍是最清透的地方（看得出厚度），
+             文字待的中間則夠濃。沒有背景模糊可用時，這是文字不被桌面花紋吃掉的唯一辦法。 -->
+        <LinearGradientBrush x:Key="GlassCore" StartPoint="0,0" EndPoint="0,1">
+            <GradientStop Offset="0" Color="#33070E1C"/>
+            <GradientStop Offset="1" Color="#3D060C18"/>
+        </LinearGradientBrush>
+        <LinearGradientBrush x:Key="GlassRim" StartPoint="0.1,0" EndPoint="0.9,1">
+            <GradientStop Offset="0" Color="#8CFFFFFF"/>
+            <GradientStop Offset="0.16" Color="#33FFFFFF"/>
+            <GradientStop Offset="0.5" Color="#14FFFFFF"/>
+            <GradientStop Offset="0.84" Color="#2BFFFFFF"/>
+            <GradientStop Offset="1" Color="#5EFFFFFF"/>
+        </LinearGradientBrush>
+        <!-- 亮邊內側的暗髮絲線：兩條線並排才看得出「玻璃有厚度」，只有亮邊會像貼紙。 -->
+        <SolidColorBrush x:Key="GlassBevel" Color="#2E000814"/>
+        <LinearGradientBrush x:Key="GlassTopSheen" StartPoint="0,0" EndPoint="0,1">
+            <GradientStop Offset="0" Color="#4AFFFFFF"/>
+            <GradientStop Offset="0.55" Color="#12FFFFFF"/>
+            <GradientStop Offset="1" Color="#00FFFFFF"/>
+        </LinearGradientBrush>
+        <LinearGradientBrush x:Key="GlassFloorSheen" StartPoint="0,1" EndPoint="0,0">
+            <GradientStop Offset="0" Color="#1EFFFFFF"/>
+            <GradientStop Offset="1" Color="#00FFFFFF"/>
+        </LinearGradientBrush>
+        <!-- 上緣正下方那一道細反光。玻璃之所以看起來是玻璃，多半就是這一條。 -->
+        <LinearGradientBrush x:Key="GlassSpecular" StartPoint="0,0" EndPoint="1,0">
+            <GradientStop Offset="0" Color="#00FFFFFF"/>
+            <GradientStop Offset="0.22" Color="#3DFFFFFF"/>
+            <GradientStop Offset="0.55" Color="#1AFFFFFF"/>
+            <GradientStop Offset="1" Color="#00FFFFFF"/>
+        </LinearGradientBrush>
+        <LinearGradientBrush x:Key="AccentFill" StartPoint="0,0" EndPoint="1,0">
+            <GradientStop Offset="0" Color="#7FD0FF"/>
+            <GradientStop Offset="1" Color="#A9B4FF"/>
+        </LinearGradientBrush>
+
+        <!-- ==== 玻璃上的面板與控制項 ====
+             面板一律用「壓暗＋亮邊」而不是「打亮」：白底桌面時打亮會讓白字沒得站。 -->
+        <SolidColorBrush x:Key="PanelSurface" Color="#2B0A1220"/>
+        <SolidColorBrush x:Key="PanelRim" Color="#26FFFFFF"/>
+        <SolidColorBrush x:Key="WellSurface" Color="#38060C18"/>
+        <SolidColorBrush x:Key="WellRim" Color="#1FFFFFFF"/>
+        <SolidColorBrush x:Key="ControlSurface" Color="#16FFFFFF"/>
+        <SolidColorBrush x:Key="ControlHover" Color="#2EFFFFFF"/>
+        <SolidColorBrush x:Key="ControlPressed" Color="#548FB7FF"/>
+        <SolidColorBrush x:Key="ControlRim" Color="#2BFFFFFF"/>
+        <SolidColorBrush x:Key="TrackSurface" Color="#1FFFFFFF"/>
+
+        <!-- 文字在未知桌面背景上的保底：加一圈暗光暈，比把整片底色加深更不傷透明感。 -->
+        <DropShadowEffect x:Key="TextLegibility" BlurRadius="7" ShadowDepth="0" Opacity="0.65" Color="#050912"/>
+
+        <!-- ==== 設定／編輯視窗 ====
+             它們是不透明的一般視窗（要能拖、能關），只借用同一組顏色與圓角。 -->
+        <LinearGradientBrush x:Key="DialogSurface" StartPoint="0,0" EndPoint="0.4,1">
+            <GradientStop Offset="0" Color="#FF1B2540"/>
+            <GradientStop Offset="1" Color="#FF0E1424"/>
+        </LinearGradientBrush>
+        <SolidColorBrush x:Key="DialogCard" Color="#0FFFFFFF"/>
+        <Style x:Key="SectionHeader" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Foreground" Value="{StaticResource Accent}"/>
+            <Setter Property="Margin" Value="4,0,0,8"/>
+        </Style>
+        <Style x:Key="FieldLabel" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="12.5"/>
+            <Setter Property="Foreground" Value="{StaticResource TextSecondary}"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+
+        <!-- ==== 按鈕 ====
+             按下時縮一下再彈回，是這版唯一的「液態」動態；靜止時不動畫。 -->
+        <Style x:Key="GlassIconButton" TargetType="Button">
+            <Setter Property="Width" Value="44"/>
+            <Setter Property="Height" Value="44"/>
             <Setter Property="Foreground" Value="{StaticResource TextPrimary}"/>
-            <Setter Property="Background" Value="#10FFFFFF"/>
-            <Setter Property="BorderBrush" Value="#28FFFFFF"/>
+            <Setter Property="Background" Value="{StaticResource ControlSurface}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource ControlRim}"/>
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="FontFamily" Value="Segoe Fluent Icons"/>
-            <Setter Property="FontSize" Value="17"/>
+            <Setter Property="FontSize" Value="16"/>
             <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="SnapsToDevicePixels" Value="True"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <Border x:Name="Chrome" CornerRadius="16" Background="{TemplateBinding Background}"
-                                BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}">
+                        <Grid Background="Transparent" RenderTransformOrigin="0.5,0.5">
+                            <Grid.RenderTransform><ScaleTransform x:Name="Squish" ScaleX="1" ScaleY="1"/></Grid.RenderTransform>
+                            <Border x:Name="Chrome" CornerRadius="15" Background="{TemplateBinding Background}"
+                                    BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}"/>
+                            <Border x:Name="Sheen" CornerRadius="15" Background="{StaticResource GlassTopSheen}" Opacity="0.8"/>
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                        </Border>
+                        </Grid>
                         <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Chrome" Property="Background" Value="#26FFFFFF"/></Trigger>
-                            <Trigger Property="IsPressed" Value="True"><Setter TargetName="Chrome" Property="Background" Value="#5278A9FF"/></Trigger>
-                            <Trigger Property="IsEnabled" Value="False"><Setter TargetName="Chrome" Property="Opacity" Value="0.45"/></Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Chrome" Property="Background" Value="{StaticResource ControlHover}"/>
+                                <Setter TargetName="Chrome" Property="BorderBrush" Value="#4DFFFFFF"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="Chrome" Property="Background" Value="{StaticResource ControlPressed}"/>
+                                <Trigger.EnterActions>
+                                    <BeginStoryboard>
+                                        <Storyboard>
+                                            <DoubleAnimation Storyboard.TargetName="Squish" Storyboard.TargetProperty="ScaleX" To="0.9" Duration="0:0:0.09"/>
+                                            <DoubleAnimation Storyboard.TargetName="Squish" Storyboard.TargetProperty="ScaleY" To="0.9" Duration="0:0:0.09"/>
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </Trigger.EnterActions>
+                                <Trigger.ExitActions>
+                                    <BeginStoryboard>
+                                        <Storyboard>
+                                            <DoubleAnimation Storyboard.TargetName="Squish" Storyboard.TargetProperty="ScaleX" To="1" Duration="0:0:0.22">
+                                                <DoubleAnimation.EasingFunction><BackEase Amplitude="0.6" EasingMode="EaseOut"/></DoubleAnimation.EasingFunction>
+                                            </DoubleAnimation>
+                                            <DoubleAnimation Storyboard.TargetName="Squish" Storyboard.TargetProperty="ScaleY" To="1" Duration="0:0:0.22">
+                                                <DoubleAnimation.EasingFunction><BackEase Amplitude="0.6" EasingMode="EaseOut"/></DoubleAnimation.EasingFunction>
+                                            </DoubleAnimation>
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </Trigger.ExitActions>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="Chrome" Property="Opacity" Value="0.3"/>
+                                <Setter TargetName="Sheen" Property="Opacity" Value="0.2"/>
+                                <Setter Property="Foreground" Value="{StaticResource TextMuted}"/>
+                            </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
         </Style>
-        <Style x:Key="GlassTextButton" TargetType="Button" BasedOn="{StaticResource GlassButton}">
+
+        <!-- 主要動作（播放／暫停）：同一塊玻璃，染上 accent。 -->
+        <Style x:Key="GlassPrimaryButton" TargetType="Button" BasedOn="{StaticResource GlassIconButton}">
+            <Setter Property="Width" Value="46"/>
+            <Setter Property="Height" Value="46"/>
+            <Setter Property="FontSize" Value="18"/>
+            <Setter Property="Background" Value="#528FB7FF"/>
+            <Setter Property="BorderBrush" Value="#85A9CCFF"/>
+        </Style>
+
+        <!-- 文字膠囊（展開區的動作列）。 -->
+        <Style x:Key="GlassPillButton" TargetType="Button" BasedOn="{StaticResource GlassIconButton}">
+            <Setter Property="Width" Value="Auto"/>
+            <Setter Property="MinWidth" Value="88"/>
             <Setter Property="FontFamily" Value="Segoe UI Variable Text"/>
             <Setter Property="FontSize" Value="12"/>
-            <Setter Property="MinWidth" Value="72"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Padding" Value="14,0"/>
+        </Style>
+
+        <!-- 語速的 −／＋：兩顆共用同一個膠囊，所以自己不再畫框。 -->
+        <Style x:Key="GlassStepButton" TargetType="Button" BasedOn="{StaticResource GlassIconButton}">
+            <Setter Property="Width" Value="42"/>
+            <Setter Property="Height" Value="42"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
+        </Style>
+
+        <!-- ==== 進度 ==== -->
+        <Style x:Key="GlassProgress" TargetType="ProgressBar">
+            <Setter Property="Height" Value="3"/>
+            <Setter Property="Foreground" Value="{StaticResource AccentFill}"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ProgressBar">
+                        <Border CornerRadius="2" Background="{StaticResource TrackSurface}" SnapsToDevicePixels="True">
+                            <Grid>
+                                <Border x:Name="PART_Track"/>
+                                <Border x:Name="PART_Indicator" HorizontalAlignment="Left" CornerRadius="2" Background="{TemplateBinding Foreground}"/>
+                            </Grid>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- ==== 捲軸：細、無按鈕，只在玻璃上留一條光 ==== -->
+        <Style x:Key="GlassScrollThumb" TargetType="Thumb">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Thumb">
+                        <Border x:Name="Bar" CornerRadius="3" Margin="2,0" Background="#33FFFFFF"/>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Bar" Property="Background" Value="#59FFFFFF"/></Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style TargetType="ScrollBar">
+            <Setter Property="Width" Value="8"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ScrollBar">
+                        <Grid Background="Transparent">
+                            <Track x:Name="PART_Track" IsDirectionReversed="True">
+                                <Track.DecreaseRepeatButton>
+                                    <RepeatButton Command="ScrollBar.PageUpCommand" Opacity="0" Focusable="False"/>
+                                </Track.DecreaseRepeatButton>
+                                <Track.Thumb>
+                                    <Thumb Style="{StaticResource GlassScrollThumb}"/>
+                                </Track.Thumb>
+                                <Track.IncreaseRepeatButton>
+                                    <RepeatButton Command="ScrollBar.PageDownCommand" Opacity="0" Focusable="False"/>
+                                </Track.IncreaseRepeatButton>
+                            </Track>
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <!-- IsDirectionReversed 只有垂直時該是 True；橫的忘了翻會變成拖曳方向相反。 -->
+                            <Trigger Property="Orientation" Value="Horizontal">
+                                <Setter TargetName="PART_Track" Property="IsDirectionReversed" Value="False"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <Trigger Property="Orientation" Value="Horizontal">
+                    <Setter Property="Width" Value="Auto"/>
+                    <Setter Property="Height" Value="8"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <!-- ==== 佇列 ==== -->
+        <Style TargetType="ListBox">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Foreground" Value="{StaticResource TextPrimary}"/>
+            <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Disabled"/>
+        </Style>
+        <Style TargetType="ListBoxItem">
+            <Setter Property="Padding" Value="10,7"/>
+            <Setter Property="Margin" Value="0,1"/>
+            <Setter Property="Foreground" Value="{StaticResource TextPrimary}"/>
+            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ListBoxItem">
+                        <Border x:Name="Chip" CornerRadius="12" Background="Transparent" BorderThickness="1" BorderBrush="Transparent"
+                                Padding="{TemplateBinding Padding}" SnapsToDevicePixels="True">
+                            <ContentPresenter HorizontalAlignment="Stretch"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Chip" Property="Background" Value="#16FFFFFF"/></Trigger>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="Chip" Property="Background" Value="#338FB7FF"/>
+                                <Setter TargetName="Chip" Property="BorderBrush" Value="#5C9FC4FF"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- ==== 下拉：快速換聲音用，設定視窗也吃這一套 ==== -->
+        <Style TargetType="ComboBoxItem">
+            <Setter Property="Padding" Value="10,7"/>
+            <Setter Property="Foreground" Value="{StaticResource TextPrimary}"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ComboBoxItem">
+                        <Border x:Name="Chip" CornerRadius="9" Margin="3,1" Background="Transparent" BorderThickness="1"
+                                BorderBrush="Transparent" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <!-- 滑過別人時仍要看得出「目前用的是哪一個」，所以選取要有自己的樣子。 -->
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="Chip" Property="BorderBrush" Value="#7FA9CCFF"/>
+                                <Setter TargetName="Chip" Property="Background" Value="#1F8FB7FF"/>
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Chip" Property="Background" Value="#1FFFFFFF"/></Trigger>
+                            <Trigger Property="IsHighlighted" Value="True"><Setter TargetName="Chip" Property="Background" Value="#338FB7FF"/></Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style TargetType="ComboBox">
+            <Setter Property="Foreground" Value="{StaticResource TextPrimary}"/>
+            <Setter Property="FontFamily" Value="Segoe UI Variable Text"/>
+            <Setter Property="FontSize" Value="12"/>
             <Setter Property="MinHeight" Value="40"/>
-            <Setter Property="Margin" Value="4"/>
-            <Setter Property="Padding" Value="8,5"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ComboBox">
+                        <Grid>
+                            <ToggleButton x:Name="Toggle" Focusable="False" ClickMode="Press"
+                                          IsChecked="{Binding IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}">
+                                <ToggleButton.Template>
+                                    <ControlTemplate TargetType="ToggleButton">
+                                        <Border x:Name="Chrome" CornerRadius="14" Background="{StaticResource ControlSurface}"
+                                                BorderBrush="{StaticResource ControlRim}" BorderThickness="1" SnapsToDevicePixels="True">
+                                            <Border CornerRadius="14" Background="{StaticResource GlassTopSheen}" Opacity="0.75"/>
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Chrome" Property="Background" Value="{StaticResource ControlHover}"/></Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </ToggleButton.Template>
+                            </ToggleButton>
+                            <!-- 用這個樣板的 ComboBox 一律要設 ItemTemplate，不能只設 DisplayMemberPath：
+                                 只設 DisplayMemberPath 時 SelectionBoxItemTemplate 是 null（2026-09-14 實測），
+                                 這個 ContentPresenter 就會退回印物件的 ToString。 -->
+                            <ContentPresenter Margin="14,0,34,0" VerticalAlignment="Center" IsHitTestVisible="False"
+                                              Content="{TemplateBinding SelectionBoxItem}"
+                                              ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"
+                                              ContentStringFormat="{TemplateBinding SelectionBoxItemStringFormat}"/>
+                            <TextBlock Text="&#xE70D;" FontFamily="Segoe Fluent Icons" FontSize="10" Margin="0,0,14,0"
+                                       HorizontalAlignment="Right" VerticalAlignment="Center" IsHitTestVisible="False"
+                                       Foreground="{StaticResource TextSecondary}"/>
+                            <Popup x:Name="PART_Popup" AllowsTransparency="True" Placement="Bottom" Focusable="False"
+                                   IsOpen="{Binding IsDropDownOpen, RelativeSource={RelativeSource TemplatedParent}}"
+                                   PopupAnimation="Fade">
+                                <Border MinWidth="{Binding ActualWidth, RelativeSource={RelativeSource TemplatedParent}}"
+                                        MaxHeight="{TemplateBinding MaxDropDownHeight}" Margin="0,6,0,0" CornerRadius="16"
+                                        Background="#F21A2438" BorderBrush="{StaticResource ControlRim}" BorderThickness="1">
+                                    <ScrollViewer Margin="4" VerticalScrollBarVisibility="Auto">
+                                        <ItemsPresenter/>
+                                    </ScrollViewer>
+                                </Border>
+                            </Popup>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- ==== 設定／編輯視窗共用的輸入元件 ==== -->
+        <Style TargetType="TextBox">
+            <Setter Property="Foreground" Value="{StaticResource TextPrimary}"/>
+            <Setter Property="CaretBrush" Value="{StaticResource TextPrimary}"/>
+            <Setter Property="SelectionBrush" Value="{StaticResource Accent}"/>
+            <Setter Property="FontFamily" Value="Segoe UI Variable Text"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Padding" Value="10,7"/>
+            <Setter Property="MinHeight" Value="36"/>
+            <!-- 單行的置中才好看，多行的要靠上；多行欄位自己設 VerticalContentAlignment="Top"。 -->
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TextBox">
+                        <Border x:Name="Chrome" CornerRadius="12" Background="#14FFFFFF" BorderBrush="{StaticResource ControlRim}" BorderThickness="1" SnapsToDevicePixels="True">
+                            <ScrollViewer x:Name="PART_ContentHost" Margin="{TemplateBinding Padding}"
+                                          VerticalAlignment="{TemplateBinding VerticalContentAlignment}"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Chrome" Property="Background" Value="#1FFFFFFF"/></Trigger>
+                            <Trigger Property="IsFocused" Value="True"><Setter TargetName="Chrome" Property="BorderBrush" Value="{StaticResource Accent}"/></Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style TargetType="CheckBox">
+            <Setter Property="Foreground" Value="{StaticResource TextPrimary}"/>
+            <Setter Property="FontFamily" Value="Segoe UI Variable Text"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="CheckBox">
+                        <StackPanel Orientation="Horizontal" Background="Transparent">
+                            <Border x:Name="Box" Width="22" Height="22" CornerRadius="7" VerticalAlignment="Center"
+                                    Background="#14FFFFFF" BorderBrush="{StaticResource ControlRim}" BorderThickness="1">
+                                <TextBlock x:Name="Tick" Text="&#xE73E;" FontFamily="Segoe Fluent Icons" FontSize="11" Opacity="0"
+                                           HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="#0B1220"/>
+                            </Border>
+                            <ContentPresenter Margin="10,0,0,0" VerticalAlignment="Center"/>
+                        </StackPanel>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="Box" Property="Background" Value="{StaticResource Accent}"/>
+                                <Setter TargetName="Box" Property="BorderBrush" Value="{StaticResource Accent}"/>
+                                <Setter TargetName="Tick" Property="Opacity" Value="1"/>
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Box" Property="BorderBrush" Value="#66FFFFFF"/></Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style TargetType="Button">
+            <Setter Property="Foreground" Value="{StaticResource TextPrimary}"/>
+            <Setter Property="FontFamily" Value="Segoe UI Variable Text"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="MinHeight" Value="40"/>
+            <Setter Property="Padding" Value="16,0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Background" Value="{StaticResource ControlSurface}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource ControlRim}"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Chrome" CornerRadius="13" Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="1" SnapsToDevicePixels="True">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" Margin="{TemplateBinding Padding}"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Chrome" Property="Background" Value="{StaticResource ControlHover}"/></Trigger>
+                            <Trigger Property="IsPressed" Value="True"><Setter TargetName="Chrome" Property="Background" Value="{StaticResource ControlPressed}"/></Trigger>
+                            <Trigger Property="IsEnabled" Value="False"><Setter TargetName="Chrome" Property="Opacity" Value="0.35"/></Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
         </Style>
     </Application.Resources>
 </Application>

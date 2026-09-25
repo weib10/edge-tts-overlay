@@ -40,6 +40,7 @@ public static class OverlayCapture {
     [DllImport("user32.dll")] public static extern bool SetCursorPos(int x, int y);
     [DllImport("user32.dll")] public static extern bool GetCursorPos(out Point point);
     [DllImport("user32.dll")] public static extern void mouse_event(uint flags, uint dx, uint dy, uint data, IntPtr extra);
+    [DllImport("user32.dll")] public static extern int GetSystemMetrics(int index);
     [StructLayout(LayoutKind.Sequential)] public struct RECT { public int Left, Top, Right, Bottom; }
 }
 "@ -ReferencedAssemblies System.Drawing
@@ -62,9 +63,15 @@ function Get-OverlayProcess {
 }
 
 function Get-OverlayWindow([int]$OverlayPid) {
+    # Match on control type too: a tooltip left showing under the cursor is also a
+    # top-level element of this process, and matching on pid alone can return it.
     $root = [System.Windows.Automation.AutomationElement]::RootElement
-    $condition = New-Object System.Windows.Automation.PropertyCondition(
-        [System.Windows.Automation.AutomationElement]::ProcessIdProperty, $OverlayPid)
+    $condition = New-Object System.Windows.Automation.AndCondition(
+        (New-Object System.Windows.Automation.PropertyCondition(
+            [System.Windows.Automation.AutomationElement]::ProcessIdProperty, $OverlayPid)),
+        (New-Object System.Windows.Automation.PropertyCondition(
+            [System.Windows.Automation.AutomationElement]::ControlTypeProperty,
+            [System.Windows.Automation.ControlType]::Window)))
     $window = $root.FindFirst([System.Windows.Automation.TreeScope]::Children, $condition)
     if (-not $window) { throw "UI Automation cannot see the overlay window. Normal mode sets TOOLWINDOW; use --ui-test." }
     return $window
@@ -96,11 +103,22 @@ function Get-OverlayHeight([IntPtr]$Handle) {
 function Save-OverlayShot([IntPtr]$Handle, [string]$Path, [int]$Padding = 70) {
     $rect = New-Object OverlayCapture+RECT
     if (-not [OverlayCapture]::GetWindowRect($Handle, [ref]$rect)) { throw "GetWindowRect failed." }
-    $bitmap = New-Object System.Drawing.Bitmap(
-        (($rect.Right - $rect.Left) + $Padding * 2), (($rect.Bottom - $rect.Top) + $Padding * 2))
+    # The padded rect must stay inside the virtual screen: CopyFromScreen throws
+    # "The handle is invalid" for anything outside it, and the overlay normally sits
+    # flush against a work-area corner, so the padding does run off the edge there.
+    $vx = [OverlayCapture]::GetSystemMetrics(76)
+    $vy = [OverlayCapture]::GetSystemMetrics(77)
+    $vr = $vx + [OverlayCapture]::GetSystemMetrics(78)
+    $vb = $vy + [OverlayCapture]::GetSystemMetrics(79)
+    $left = [Math]::Max(($rect.Left - $Padding), $vx)
+    $top = [Math]::Max(($rect.Top - $Padding), $vy)
+    $right = [Math]::Min(($rect.Right + $Padding), $vr)
+    $bottom = [Math]::Min(($rect.Bottom + $Padding), $vb)
+    if ($right -le $left -or $bottom -le $top) { throw "Overlay is outside the virtual screen." }
+    $bitmap = New-Object System.Drawing.Bitmap(($right - $left), ($bottom - $top))
     $graphics = [System.Drawing.Graphics]::FromImage($bitmap)
     try {
-        $graphics.CopyFromScreen(($rect.Left - $Padding), ($rect.Top - $Padding), 0, 0, $bitmap.Size)
+        $graphics.CopyFromScreen($left, $top, 0, 0, $bitmap.Size)
         $bitmap.Save($Path, [System.Drawing.Imaging.ImageFormat]::Png)
     } finally { $graphics.Dispose(); $bitmap.Dispose() }
 }

@@ -8,7 +8,7 @@ public partial class SettingsWindow : Window
     private readonly AppSettings _settings; private readonly TtsClient _client; private CancellationTokenSource? _previewCts;
     public SettingsWindow(AppSettings settings, TtsClient client)
     {
-        InitializeComponent(); _settings = settings; _client = client;
+        InitializeComponent(); _settings = settings; _client = client; SourceInitialized += (_, _) => DarkTitleBar.Apply(this);
         RateBox.Text = settings.Rate.ToString(); VolumeBox.Text = settings.Volume.ToString(); PitchBox.Text = settings.Pitch.ToString(); ReadingModeBox.IsChecked = settings.ReadingMode; StartupBox.IsChecked = settings.StartWithWindows;
         ToggleBox.Text = settings.ToggleHotkey; ReplaceBox.Text = settings.ReplaceHotkey; AppendBox.Text = settings.AppendHotkey; PauseBox.Text = settings.PauseHotkey; StopBox.Text = settings.StopHotkey;
         DictionaryBox.Text = string.Join(Environment.NewLine, settings.Pronunciations.Select(x => $"{x.Key}={x.Value}")); Loaded += async (_, _) => { try { VoiceBox.ItemsSource = await _client.GetVoicesAsync(); VoiceBox.SelectedValue = settings.Voice; } catch (Exception ex) { System.Windows.MessageBox.Show(ex.Message, "無法取得聲音"); } }; Closed += (_, _) => _previewCts?.Cancel();
