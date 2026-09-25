@@ -30,7 +30,7 @@ UI 材質與 token 的正本是 `design-system/edge-tts-overlay/MASTER.md`，改
 
 - **驗收分三級，做到哪級寫哪級，沒做到的不宣稱。** `test.ps1` 自動測試 → `scripts/check_overlay_visuals.ps1` 離屏渲染（只證明 alpha 與版面）→ 實機截圖與操作（才能證明透明度、拖曳、no-activate）。2026-09-13 多輪實機工具抓不到畫面，HANDOFF 照實寫「未驗收」，這是本專案的寫法。
 - 回覆、HANDOFF 與 UI 字串都是 zh-tw。
-- 本專案不吃 GPU（合成在雲端）；檔尾的 gpu-rule 是全機固定件，留著不改。
+- 本專案不吃 GPU（合成在雲端）。
 
 ## 驗證
 
@@ -40,22 +40,3 @@ powershell -NoProfile -File .\scripts\check_overlay_visuals.ps1   # 改了 MainW
 ```
 
 連網的 `online_smoke.py` 與對跑中 8766 打的 `repro_429.py` 只在改後端併發或聲音清單時跑（見紅線第三條）；完整指令在 HANDOFF「驗證命令」。
-
-<!-- gpu-rule -->
-## 要用 GPU：先跟佇列要
-
-全機只有一張卡，各專案的 session 看不到對方在跑什麼。**規則正本在 `..\AGENTS.md`（跨專案），必讀。**
-
-- 有 argv 的（腳本、訓練、批次推論）→ `gq add --name … --project … --vram … --est … --window … -- <argv>`
-- **自己要用 ComfyUI／Ollama 一段時間 → 先要 lease，拿到才可以動手**：
-
-  ```
-  gq lease comfyui --est 30 --project <本專案> --by "claude:<本專案>"   # exit 0 才是你的
-  gq lease-check <id>    # 0 還握著 / 75 還在等 / 1 被收回，立刻停手
-  gq release <id>        # 做完馬上還
-  ```
-
-  **ComfyUI 與 Ollama 沒有「5 分鐘以下直接跑」的豁免**：運算在它們的行程裡，不走佇列的話
-  沒有人看得出是誰要的，也沒辦法幫你延後或在被遊戲搶佔後補跑。
-
-- 停 daemon 只准 `gq daemon stop`，不要 `taskkill /T`。儀表板：http://127.0.0.1:8765/
