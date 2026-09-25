@@ -29,6 +29,7 @@ UI 材質與 token 的正本是 `design-system/edge-tts-overlay/MASTER.md`，改
 ## 慣例
 
 - **驗收分三級，做到哪級寫哪級，沒做到的不宣稱。** `test.ps1` 自動測試 → `scripts/check_overlay_visuals.ps1` 離屏渲染（只證明 alpha 與版面）→ 實機截圖與操作（才能證明透明度、拖曳、no-activate）。2026-09-13 多輪實機工具抓不到畫面，HANDOFF 照實寫「未驗收」，這是本專案的寫法。
+  第三級的做法：用 `--ui-test` 啟動 overlay，跑 `scripts/capture_overlay.ps1`（讀 StatusText、截 DWM 合成後的畫面、用真實滑鼠點展開／收合、比對前景 hwnd 判定 no-activate），驗完 `--shutdown`，再用 `start.ps1` 開回正常版。瀏覽器預覽看不到原生 overlay；Codex 的 Computer Use（`@oai/sky`）要它自己的桌面 session 活著才有 native pipe（2026-09-13 回報 pipe 不存在）。
 - 回覆、HANDOFF 與 UI 字串都是 zh-tw。
 - 本專案不吃 GPU（合成在雲端）。
 
@@ -40,3 +41,8 @@ powershell -NoProfile -File .\scripts\check_overlay_visuals.ps1   # 改了 MainW
 ```
 
 連網的 `online_smoke.py` 與對跑中 8766 打的 `repro_429.py` 只在改後端併發或聲音清單時跑（見紅線第三條）；完整指令在 HANDOFF「驗證命令」。
+
+## Claude Code
+
+- 寫／改 AGENTS.md、CLAUDE.md、skill → `mattpocock-skills:writing-for-agents`；整份翻修 → `agents-kit`。
+- 三支 `.ps1` 從 Bash tool 跑：`powershell.exe -NoProfile -ExecutionPolicy RemoteSigned -File .\start.ps1`（process scope，符合紅線）。PowerShell tool 是 5.1，腳本本來就相容，直接 `.\test.ps1` 即可。
